@@ -21,7 +21,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   return res.status(404).json({ message: "Route not found" });
 });
 app.use((err: ApiErrType, req: Request, res: Response, next: NextFunction) => {
-  return res.status(err.statusCode || 500).json({ message: err.message });
+  return res
+    .status(err.statusCode || 500)
+    .json({ message: err.message, errorType: err.errorType, success: false });
 });
 
 app.listen(ENV.PORT, () => {
