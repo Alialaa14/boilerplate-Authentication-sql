@@ -15,4 +15,5 @@ export const ENV = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || "",
   EMAIL: process.env.EMAIL || "",
   EMAIL_PASSWORD: process.env.PASSWORD || "",
+  SALT: process.env.SALT || "SALT",
 };

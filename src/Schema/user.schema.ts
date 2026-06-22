@@ -3,18 +3,22 @@ import {
   int,
   varchar,
   boolean,
-  date,
+  timestamp,
 } from "drizzle-orm/mysql-core";
 
-export const user = mysqlTable("users", {
+const User = mysqlTable("users", {
   id: int().autoincrement().primaryKey(),
   username: varchar({ length: 50 }).notNull(),
   email: varchar({ length: 50 }).notNull().unique(),
   password: varchar({ length: 255 }).notNull(),
   isOnline: boolean().notNull().default(false),
   RefreshToken: varchar({ length: 255 }),
-  RefreshTokenExpiry: date(),
+  RefreshTokenExpiry: timestamp("RefreshTokenExpiry", { mode: "date" }),
   picture_url: varchar({ length: 255 }),
   picture_id: varchar({ length: 255 }),
   role: varchar({ length: 50 }).notNull().default("user"),
+  otp: varchar({ length: 6 }),
+  otpExpiry: timestamp("otpExpiry", { mode: "date" }),
 });
+
+export default User;
