@@ -16,4 +16,6 @@ export const ENV = {
   EMAIL: process.env.EMAIL || "",
   EMAIL_PASSWORD: process.env.PASSWORD || "",
   SALT: process.env.SALT || "SALT",
+  CLIENT_ID: process.env.CLIENT_ID || "",
+  CLIENT_SECRET: process.env.CLIENT_SECRET || "",
 };

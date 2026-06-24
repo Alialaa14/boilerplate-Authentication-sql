@@ -22,6 +22,8 @@ import {
 
 import { removePicsFromLocal } from "../helpers/removeLocalPics.ts";
 
+import { Passport } from "../utils/googleoAuth.ts";
+
 export const register = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { username, email, password } = req.body;
@@ -95,8 +97,7 @@ export const login = asyncHandler(
 
     const user = checkExistingUser[0];
     if (!user) return next(new ApiError("User Not Found", 404));
-    console.log(user);
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    const isPasswordCorrect = await bcrypt.compare(password, user.password!);
     console.log(isPasswordCorrect);
     if (!isPasswordCorrect)
       return next(new ApiError("Incorrect Password", StatusCodes.UNAUTHORIZED));
@@ -340,5 +341,64 @@ export const updateUser = asyncHandler(
     return res
       .status(StatusCodes.OK)
       .json(new ApiResponse(true, "Profile Updated Successfully", updateUser));
+  },
+);
+
+export const googleCallback = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    Passport.authenticate(
+      "google",
+      {
+        failureRedirect: "/login",
+        successRedirect: "/api/v1/auth/dashboard",
+      },
+      async (error, profile) => {
+        if (error)
+          return res
+            .status(StatusCodes.BAD_REQUEST)
+            .json(
+              new ApiError("Something Went Wrong", StatusCodes.BAD_REQUEST),
+            );
+        if (!profile) return res.redirect("/api/v1/auth/login");
+
+        let user: any = await db
+          .select()
+          .from(User)
+          .where(eq(User.email, profile.emails[0].value));
+
+        if (user.length === 0) {
+          user = await db
+            .insert(User)
+            .values({
+              email: profile.emails[0].value,
+              username: profile.displayName,
+              picture_url: profile.photos[0].value,
+              isOnline: true,
+              googleId: profile.id,
+            })
+            .$returningId();
+        }
+        req.logIn(user[0].id, (err) => {
+          console.log(err);
+          if (err) return res.redirect("/api/v1/auth/login");
+          return res.redirect("/api/v1/auth/dashboard");
+        });
+      },
+    )(req, res, next);
+  },
+);
+
+export const googleLogout = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    req.logout(function (err) {
+      if (err) {
+        return next(
+          new ApiError("Something Went Wrong", StatusCodes.BAD_REQUEST),
+        );
+      }
+      return res
+        .status(StatusCodes.OK)
+        .json(new ApiResponse(true, "Logout Success", null));
+    });
   },
 );

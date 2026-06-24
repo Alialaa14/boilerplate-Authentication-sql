@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { isAuthenticated } from "../Middlewares/isAuthenticated.ts";
-import { isAuthorized } from "../Middlewares/isAuthorized.ts";
 import {
   register,
   login,
@@ -9,6 +8,7 @@ import {
   forgotPassword,
   verifyOtp,
   updateUser,
+  googleLogout,
 } from "../Controllers/user.controllers.ts";
 import { upload } from "../utils/multer.ts";
 import { validationMiddleware } from "../Middlewares/validationMiddleware.ts";
@@ -20,6 +20,8 @@ import {
   resetpasswordSchema,
   updateProfileSchema,
 } from "../validationSchemas/userValidationSchema.ts";
+import { Passport } from "../utils/googleoAuth.ts";
+import { googleCallback } from "../Controllers/user.controllers.ts";
 
 const router = Router();
 
@@ -49,5 +51,17 @@ router.patch(
   validationMiddleware(updateProfileSchema),
   updateUser,
 );
+
+router.get(
+  "/google-auth-login",
+  Passport.authenticate("google", { scope: ["email", "profile"] }),
+);
+
+router.get("/google/callback", googleCallback);
+router.get("/google-auth-logout", isAuthenticated, googleLogout);
+
+router.get("/dashboard", isAuthenticated, (req, res, next) => {
+  return res.json(req.user);
+});
 
 export default router;

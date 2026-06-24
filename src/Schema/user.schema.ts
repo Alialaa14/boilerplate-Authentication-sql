@@ -10,7 +10,12 @@ const User = mysqlTable("users", {
   id: int().autoincrement().primaryKey(),
   username: varchar({ length: 50 }).notNull(),
   email: varchar({ length: 50 }).notNull().unique(),
-  password: varchar({ length: 255 }).notNull(),
+  password: varchar("password", { length: 255 })
+    .$type<string | null>()
+    .default(null),
+  googleId: varchar("googleId", { length: 255 })
+    .$type<string | null>()
+    .unique(),
   isOnline: boolean().notNull().default(false),
   RefreshToken: varchar({ length: 255 }),
   RefreshTokenExpiry: timestamp("RefreshTokenExpiry", { mode: "date" }),
