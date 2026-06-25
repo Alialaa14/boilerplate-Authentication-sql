@@ -9,6 +9,7 @@ import { type Request, type Response, type NextFunction } from "express";
 import { type ApiErrType } from "./types/ApiError.types.ts";
 import userRouter from "./routers/user.router.ts";
 import { Passport } from "./utils/googleoAuth.ts";
+import { removePicsFromLocal } from "./helpers/removeLocalPics.ts";
 
 const app = express();
 app.use(express.json());
@@ -39,6 +40,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   return res.status(404).json({ message: "Route not found" });
 });
 app.use((err: ApiErrType, req: Request, res: Response, next: NextFunction) => {
+  if (req.file) {
+    removePicsFromLocal(req.file.path);
+  }
   return res
     .status(err.statusCode || 500)
     .json({ message: err.message, errorType: err.errorType, success: false });
