@@ -9,6 +9,7 @@ import {
   verifyOtp,
   updateUser,
   googleLogout,
+  refreshAccessToken,
 } from "../Controllers/user.controllers.ts";
 import { upload } from "../utils/multer.ts";
 import { validationMiddleware } from "../Middlewares/validationMiddleware.ts";
@@ -22,6 +23,7 @@ import {
 } from "../validationSchemas/userValidationSchema.ts";
 import { Passport } from "../utils/googleoAuth.ts";
 import { googleCallback } from "../Controllers/user.controllers.ts";
+import { isAuthenticatedRefreshToken } from "../Middlewares/isAuthenticatedRefreshToken.ts";
 
 const router = Router();
 
@@ -51,6 +53,8 @@ router.patch(
   validationMiddleware(updateProfileSchema),
   updateUser,
 );
+
+router.post("/refresh-token", isAuthenticatedRefreshToken, refreshAccessToken);
 
 router.get(
   "/google-auth-login",

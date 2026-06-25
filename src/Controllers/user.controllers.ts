@@ -110,9 +110,6 @@ export const login = asyncHandler(
       .update(User)
       .set({
         RefreshToken: refreshToken,
-        RefreshTokenExpiry: new Date(
-          Date.now() + Number(ENV.REFRESH_TOKEN_EXPIRY),
-        ),
         isOnline: true,
       })
       .where(eq(User.id, user.id));
@@ -133,7 +130,6 @@ export const logout = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     await db.update(User).set({
       RefreshToken: null,
-      RefreshTokenExpiry: null,
       isOnline: false,
     });
     res.clearCookie("accessToken");
@@ -341,6 +337,35 @@ export const updateUser = asyncHandler(
     return res
       .status(StatusCodes.OK)
       .json(new ApiResponse(true, "Profile Updated Successfully", updateUser));
+  },
+);
+
+export const refreshAccessToken = asyncHandler(
+  async (req: any, res: Response, next: NextFunction) => {
+    const id = req.user?.id;
+    const user = await db.select().from(User).where(eq(User.id, id));
+    const refreshToken = user[0]?.RefreshToken;
+    if (!refreshToken) return next(new ApiError("Unauthorized", 401));
+    const verifyRefreshToken = jwt.verify(
+      refreshToken,
+      ENV.REFRESH_TOKEN_SECRET,
+    );
+    if (!verifyRefreshToken)
+      return next(new ApiError("Unauthorized or Expired", 401));
+    const accessToken = generateAccessToken({ id: user[0]?.id });
+    const newRefreshToken = generateRefreshToken({ id: user[0]?.id });
+    await db
+      .update(User)
+      .set({ RefreshToken: newRefreshToken })
+      .where(eq(User.id, id));
+    res.cookie("accessToken", accessToken, {
+      maxAge: Number(ENV.ACCESS_TOKEN_EXPIRY),
+      httpOnly: true,
+      secure: true,
+    });
+    return res
+      .status(StatusCodes.OK)
+      .json(new ApiResponse(true, "Access Token Updated", null));
   },
 );
 

@@ -18,7 +18,6 @@ const User = mysqlTable("users", {
     .unique(),
   isOnline: boolean().notNull().default(false),
   RefreshToken: varchar({ length: 255 }),
-  RefreshTokenExpiry: timestamp("RefreshTokenExpiry", { mode: "date" }),
   picture_url: varchar({ length: 255 }),
   picture_id: varchar({ length: 255 }),
   role: varchar({ length: 50 }).notNull().default("user"),
